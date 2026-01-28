@@ -124,6 +124,11 @@ export class SExprParser {
             return this.parseString();
         }
 
+        // Handle quoted atoms
+        if (char === '|') {
+            return this.parseQuotedAtom();
+        }
+
         // Handle unquoted atoms (symbols, numbers, etc.)
         const start = this.pos;
         while (this.pos < this.length) {
@@ -181,6 +186,30 @@ export class SExprParser {
         }
 
         throw new Error('Unclosed string literal');
+    }
+
+    /**
+     * Parses a quoted atom: |text|
+     * Collects all characters until the next occurrence of '|'.
+     */
+    private parseQuotedAtom(): string {
+        if (this.input[this.pos] !== '|') {
+            throw new Error(`Expected '|' at position ${this.pos}`);
+        }
+        this.pos++; // consume opening '|'
+
+        const start = this.pos;
+        while (this.pos < this.length && this.input[this.pos] !== '|') {
+            this.pos++;
+        }
+
+        if (this.pos >= this.length) {
+            throw new Error('Unclosed quoted atom: missing closing |');
+        }
+
+        const result = this.input.substring(start, this.pos);
+        this.pos++; // consume closing '|'
+        return result;
     }
 
     /**
