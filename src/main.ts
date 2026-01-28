@@ -12,8 +12,8 @@ if (!treeContainer || !inputContainer) {
 
 const visualizer = new ProofVisualizer(treeContainer);
 
-// Create file input UI
-const fileInputUI = new FileInputUI(
+// Create file input UI (no reference needed; it sets up the DOM and event handlers)
+new FileInputUI(
     inputContainer,
     (trees: TreeNode[]) => {
         console.log(`[main] ${trees.length} tree(s) loaded successfully, rendering...`);
