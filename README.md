@@ -1,13 +1,14 @@
 # Proof Visualizer
 
-A tool to visualize large tree-like data structures. The visualizer shows the root node and provides expandable boxes for child nodes, allowing you to explore the tree structure incrementally.
+A tool to visualize large tree-like data structures. Load S-expression files (from upload or URL), parse them into trees, and explore the structure with expandable nodes. Uses lazy rendering so large files stay manageable.
 
 ## Features
 
-- Displays the root node of the tree
-- Shows collapsible boxes for child nodes
-- Displays node names when available
-- Expandable/collapsible nodes for efficient navigation of large trees
+- **File input**: Upload S-EXPR files or load from a URL (with optional CORS proxy)
+- **Multiple S-expressions**: Parses files containing multiple S-expressions; each is shown as a separate tree
+- **Lazy rendering**: Child nodes are rendered only when expanded, reducing memory use for huge trees
+- **S-EXPR parsing**: Custom parser for S-expressions (lists, atoms, quoted strings, `|quoted atoms|`, comments)
+- **let / let-proof**: Bindings are added to a leaf map so references resolve to the bound nodes
 
 ## Getting Started
 
@@ -34,7 +35,7 @@ The application will be available at `http://localhost:5173`
 
 ### Build
 
-Build for production:
+Build for production (output in `dist/`, with relative asset paths for deployment):
 
 ```bash
 npm run build
@@ -48,33 +49,32 @@ npm run preview
 
 ## Usage
 
-The visualizer accepts a `TreeNode` structure. Each node can have:
-- An optional `name` property
-- A `children` array containing child nodes
+Load an S-EXPR file by uploading it or entering a URL. If the server blocks cross-origin requests, enable “Use CORS proxy”. The parser accepts:
 
-Example:
+- Lists: `(a b c)`
+- Quoted strings: `"text"`
+- Quoted atoms: `|text with spaces|`
+- Line comments: `; comment`
 
-```typescript
-const tree: TreeNode = {
-    name: "Root",
-    children: [
-        { name: "Child 1", children: [] },
-        { children: [{ name: "Grandchild", children: [] }] }
-    ]
-};
-```
+The visualizer shows each top-level S-expression as a tree. Click “Show children” on a root or click a child box to expand and render that node’s children on demand.
 
 ## Project Structure
 
 ```
 proofvisualizer/
 ├── src/
-│   ├── main.ts              # Entry point
-│   ├── ProofVisualizer.ts   # Main visualizer class
-│   ├── types.ts             # TypeScript type definitions
-│   └── styles.css           # Styles (if needed)
+│   ├── main.ts              # Entry point; wires up FileInputUI and ProofVisualizer
+│   ├── ProofVisualizer.ts   # Tree visualization with lazy-expand nodes
+│   ├── FileInputUI.ts       # File upload and URL input UI
+│   ├── FileLoader.ts        # Load from File or URL; parse and convert to TreeNode[]
+│   ├── SExprParser.ts       # S-expression parser (parse / parseAll)
+│   ├── SExprToTree.ts       # S-EXPR → TreeNode; leafMap; let/let-proof handling
+│   ├── types.ts             # TreeNode and related type definitions
+│   └── styles.css            # Styles for tree, file input, and UI
 ├── index.html               # HTML entry point
 ├── package.json             # Dependencies and scripts
 ├── tsconfig.json            # TypeScript configuration
-└── README.md               # This file
+├── vite.config.ts           # Vite config (base: './' for relative asset URLs)
+├── .gitignore
+└── README.md                # This file
 ```
