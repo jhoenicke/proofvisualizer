@@ -36,6 +36,39 @@ export class SExprToTree {
     }
 
     /**
+     * Returns true if expr is a string that starts with ':' (a keyword).
+     */
+    static isKeyword(expr: SExpr): expr is string {
+        return typeof expr === 'string' && expr[0] === ':';
+    }
+
+    /** Converts an S-expression to a string.
+     * 
+     * @param expr - The S-expression to convert.
+     * @returns The string representation of the S-expression.
+     */
+    static makeString(expr: SExpr): string {
+        if (typeof expr === 'string') {
+            return expr;
+        }
+        return "(" + expr.map((e) => this.makeString(e)).join(' ') + ")";
+    }
+
+
+    /**
+     * Converts an S-expression to an array of TreeNodes.
+     * @param expr - The S-expression to convert.
+     * @returns The array of TreeNodes.
+     */
+    static convertToArray(expr: SExpr): TreeNode[] {
+        if (typeof expr === 'string') {
+            return [ { name : expr, children: [] }];
+        } else {
+            return expr.map((x) => this.convert(x));
+        }
+    }
+
+    /**
      * Converts an S-expression to a TreeNode.
      * 
      * Assumes the S-EXPR structure represents a tree where:
@@ -78,18 +111,28 @@ export class SExprToTree {
             const first = expr[0];
 
             let name: string | undefined;
-            let childrenStart = 0;
 
             if (typeof first === 'string') {
                 // First element is a name
                 name = first;
-                childrenStart = 1;
+            } else {
+                name = this.makeString(first);
             }
 
             // Convert remaining elements to children
             const children: TreeNode[] = [];
-            for (let i = childrenStart; i < expr.length; i++) {
-                children.push(this.convert(expr[i]));
+            for (let i = 1; i < expr.length; i++) {
+                if (i < expr.length - 1 && this.isKeyword(expr[i])
+                 && !this.isKeyword(expr[i + 1])) {
+                    const keywordNode = {
+                        name: expr[i] as string,
+                        children: this.convertToArray(expr[i+1])
+                    };
+                    children.push(keywordNode);
+                    i++;
+                } else {
+                    children.push(this.convert(expr[i]));
+                }
             }
 
             return {
